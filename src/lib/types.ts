@@ -47,8 +47,21 @@ export type BossStat = {
   kc: number;
 };
 
+export type BossDebugCandidate = {
+  rawKey: string;
+  normalizedKey: string;
+  value: number;
+};
+
+export type BossExtractionDebug = {
+  accepted: BossDebugCandidate[];
+  rejected: BossDebugCandidate[];
+  unmapped: BossDebugCandidate[];
+};
+
 export type NormalizedStats = {
   username: string;
+  trackingUsername?: string;
   skills: SkillStat[];
   bosses: BossStat[];
   totalXp: number;
@@ -56,10 +69,12 @@ export type NormalizedStats = {
   totalBossKc: number;
   ehp: number | null;
   ehb: number | null;
+  bossDebug?: BossExtractionDebug;
 };
 
 export type PlayerInfo = {
   username: string;
+  trackingUsername?: string;
   formattedName?: string;
   gameMode?: string;
   lastChecked?: string;
@@ -70,6 +85,7 @@ export type PlayerInfo = {
 
 export type NormalizedCollection = {
   username: string;
+  trackingUsername?: string;
   finishedItems: number | null;
   availableItems: number | null;
   finishedCategories: number | null;
@@ -98,6 +114,7 @@ export type RecentItem = {
 
 export type PetSummary = {
   username: string;
+  trackingUsername?: string;
   petCount: number | null;
   petHours: number | null;
   pets: string[];

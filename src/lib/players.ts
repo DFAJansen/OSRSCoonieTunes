@@ -20,3 +20,5 @@ export const NAV_ITEMS = [
   { href: "/gains", label: "Season" },
   { href: "/loot-feed", label: "Loot Feed" }
 ];
+
+export const COUNCIL_NAV_ITEM = { href: "/war-council", label: "War Council" };

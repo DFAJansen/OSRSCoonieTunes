@@ -34,9 +34,10 @@ export function PlayerSummaryCard({
       const statusWeight = { completed: 3, "in-progress": 2, locked: 1 };
       return statusWeight[b.status] - statusWeight[a.status] || b.points - a.points || b.progress - a.progress;
     })
-    .slice(0, 4);
+    .slice(0, 3);
   const nextUnlock = pickNextUnlock(achievements);
   const strongestWar = profile.strongestCategory === "Collection" ? "Collection War" : `${profile.strongestCategory} War`;
+  const weakestWar = profile.weakCategory === "Collection" ? "Collection War" : `${profile.weakCategory} War`;
 
   return (
     <article className="playerSummaryCard characterSheet">
@@ -51,29 +52,29 @@ export function PlayerSummaryCard({
 
       <div className="identityRows">
         <div className="identityRow">
-          <span>Current Rank</span>
-          <strong>#{profile.rank} - {profile.favour.rank}</strong>
+          <span>God Rank</span>
+          <strong>{profile.favour.rank} of {profile.favour.god}</strong>
         </div>
         <div className="identityRow">
-          <span>Current God</span>
-          <strong>{profile.favour.god}</strong>
+          <span>Current Score</span>
+          <strong>{formatNumber(profile.totalScore)}</strong>
         </div>
-      </div>
-
-      <div className="characterMission">
-        <span>Current Mission</span>
-        <strong>{profile.nextGoal}</strong>
       </div>
 
       <div className="identityRows">
         <div className="identityRow">
-          <span>Strongest War</span>
+          <span>Strongest Area</span>
           <strong>{strongestWar}</strong>
         </div>
         <div className="identityRow">
-          <span>Next Unlock</span>
-          <strong>{formatUnlock(nextUnlock)}</strong>
+          <span>Weakest Area</span>
+          <strong>{weakestWar}</strong>
         </div>
+      </div>
+
+      <div className="characterMission">
+        <span>Next Goal</span>
+        <strong>{profile.nextGoal}</strong>
       </div>
 
       <div className="characterTags">
@@ -85,7 +86,7 @@ export function PlayerSummaryCard({
         </div>
       </div>
 
-      <Drawer label="Open character sheet">
+      <Drawer label="Open Character Sheet">
         <div className="detailGrid">
           <span>Power score <b>{formatNumber(profile.totalScore)}</b></span>
           <span>Skill score <b>{formatNumber(profile.score.skillScore)}</b></span>
@@ -98,6 +99,7 @@ export function PlayerSummaryCard({
           <span>Favour rank <b>{profile.favour.rank} of {profile.favour.god}</b></span>
           <span>Needs to pass next rank <b>{profile.pointsToOvertake === null ? "Defend #1" : `${formatNumber(profile.pointsToOvertake)} pts`}</b></span>
           <span>Archetype <b>{profile.archetype}</b></span>
+          <span>Next unlock <b>{formatUnlock(nextUnlock)}</b></span>
         </div>
         <div className="drawerAchievementBlock">
           <span>Full achievement dossier</span>

@@ -7,13 +7,15 @@ import { buildAwards } from "@/lib/awards";
 import { formatNumber } from "@/lib/format";
 import { loadStats } from "@/lib/loaders";
 import { calculateScore, SCORE_EXPLANATIONS } from "@/lib/scoring";
+import { getServerActiveParty } from "@/lib/server-settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function SkillsPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const mode = params?.mode === "xp" || params?.mode === "rank" ? params.mode : "levels";
-  const results = await loadStats();
+  const partySlots = await getServerActiveParty();
+  const results = await loadStats(partySlots);
   const stats = results.flatMap((result) => (result.ok && result.data ? [result.data] : []));
   const awards = buildAwards({ stats }).filter((award) => ["Highest Total XP", "Highest Total Level", "Woodcutting King"].includes(award.title));
   const skillLeaders = [...stats].sort((a, b) => calculateScore({ stats: b }).skillScore - calculateScore({ stats: a }).skillScore);

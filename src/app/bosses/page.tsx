@@ -1,16 +1,18 @@
 import { AwardCard } from "@/components/AwardCard";
-import { BossTable } from "@/components/BossTable";
+import { BossWarShell } from "@/components/bosses/BossWarShell";
 import { ErrorPanel } from "@/components/ErrorPanel";
 import { OsrsPanel } from "@/components/OsrsPanel";
 import { buildAwards } from "@/lib/awards";
 import { formatNumber } from "@/lib/format";
 import { loadStats } from "@/lib/loaders";
 import { calculateScore, SCORE_EXPLANATIONS } from "@/lib/scoring";
+import { getServerActiveParty } from "@/lib/server-settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function BossesPage() {
-  const results = await loadStats();
+  const partySlots = await getServerActiveParty();
+  const results = await loadStats(partySlots);
   const stats = results.flatMap((result) => (result.ok && result.data ? [result.data] : []));
   const awards = buildAwards({ stats }).filter((award) => ["Boss Goblin"].includes(award.title));
   const touchGrass = [...stats].sort((a, b) => b.totalBossKc - a.totalBossKc)[0];
@@ -50,7 +52,7 @@ export default async function BossesPage() {
           ))}
         </div>
         <ErrorPanel results={results} />
-        <BossTable players={stats} />
+        <BossWarShell players={stats} />
       </OsrsPanel>
       <div className="grid">
         {awards.map((award) => (

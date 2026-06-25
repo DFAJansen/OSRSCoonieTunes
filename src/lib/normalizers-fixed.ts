@@ -1,6 +1,8 @@
 import { getNestedValue, isRecord, safeNumber, safeString } from "./format";
+import { isBlockedBossMetric, isBossMetric, normalizeBossName, normalizeMetricName } from "./bosses";
 import type {
   BossStat,
+  BossExtractionDebug,
   CollectionLogItemRecord,
   NormalizedCollection,
   NormalizedStats,
@@ -102,22 +104,30 @@ export function extractSkillsFromStats(rawStats: unknown): SkillStat[] {
 
 export function extractBossesFromStats(rawStats: unknown): BossStat[] {
   const data = unwrapData(rawStats);
-  const excluded = new Set<string>([...Object.values(SKILL_API_KEYS), ...SYSTEM_FIELDS]);
-  for (const key of Object.values(SKILL_API_KEYS)) {
-    excluded.add(`${key}_rank`);
-    excluded.add(`${key}_level`);
-    excluded.add(`${key}_ehp`);
-  }
 
   return Object.entries(data)
     .filter(([key, value]) => {
-      if (excluded.has(key)) return false;
-      if (key.endsWith("_rank") || key.endsWith("_level") || key.toLowerCase().endsWith("_ehp")) return false;
       const number = safeNumber(value);
-      return number !== null && number > 0;
+      return number !== null && number > 0 && isBossMetric(key);
     })
-    .map(([key, value]) => ({ name: key.replace(/_/g, " "), kc: safeNumber(value) ?? 0 }))
+    .map(([key, value]) => ({ name: normalizeBossName(key), kc: safeNumber(value) ?? 0 }))
     .sort((a, b) => b.kc - a.kc);
+}
+
+export function extractBossDebugFromStats(rawStats: unknown): BossExtractionDebug {
+  const data = unwrapData(rawStats);
+  const debug: BossExtractionDebug = { accepted: [], rejected: [], unmapped: [] };
+
+  Object.entries(data).forEach(([key, value]) => {
+    const number = safeNumber(value);
+    if (number === null) return;
+    const candidate = { rawKey: key, normalizedKey: normalizeMetricName(key), value: number };
+    if (isBossMetric(key)) debug.accepted.push(candidate);
+    else if (isBlockedBossMetric(key) || key.endsWith("_rank") || key.endsWith("_level") || key.toLowerCase().endsWith("_ehp")) debug.rejected.push(candidate);
+    else if (number > 0) debug.unmapped.push(candidate);
+  });
+
+  return debug;
 }
 
 export function calculateTotalXp(skills: SkillStat[], rawStats?: unknown): number {
@@ -138,6 +148,7 @@ export function normalizePlayerStats(raw: unknown, username: string): Normalized
   const data = unwrapData(raw);
   const skills = extractSkillsFromStats(raw);
   const bosses = extractBossesFromStats(raw);
+  const bossDebug = extractBossDebugFromStats(raw);
   return {
     username: normalizeName(username, raw),
     skills,
@@ -146,7 +157,8 @@ export function normalizePlayerStats(raw: unknown, username: string): Normalized
     totalLevel: calculateTotalLevel(skills, raw),
     totalBossKc: calculateBossTotal(bosses),
     ehp: safeNumber(data.Ehp),
-    ehb: safeNumber(data.Ehb)
+    ehb: safeNumber(data.Ehb),
+    bossDebug
   };
 }
 

@@ -1,5 +1,7 @@
 import type { CollectionItemOwnership } from "@/lib/collection";
 import type { CollectionSubCategory } from "@/lib/collection-log-structure";
+import type { CollectionBossKcSummary } from "@/lib/collection-boss-kc";
+import { formatNumber } from "@/lib/format";
 import type { RecentItem } from "@/lib/types";
 
 function statusLabel(status: CollectionItemOwnership["status"]): string {
@@ -22,11 +24,13 @@ export function CollectionItemDrawer({
   item,
   category,
   recentItems,
+  bossKcSummary,
   onClose
 }: {
   item: CollectionItemOwnership | null;
   category: CollectionSubCategory;
   recentItems: RecentItem[];
+  bossKcSummary?: CollectionBossKcSummary | null;
   onClose: () => void;
 }) {
   if (!item) return null;
@@ -83,6 +87,14 @@ export function CollectionItemDrawer({
           <div className="drawerList locked">
             <strong>Unknown</strong>
             {item.unknownFor.map((player) => <b key={player}>{player}</b>)}
+          </div>
+        ) : null}
+        {bossKcSummary ? (
+          <div className="drawerList">
+            <strong>Boss KC</strong>
+            {bossKcSummary.players.map((player) => (
+              <b key={player.player}>{player.player}: {player.kc === null ? "Unknown" : formatNumber(player.kc)}</b>
+            ))}
           </div>
         ) : null}
       </aside>

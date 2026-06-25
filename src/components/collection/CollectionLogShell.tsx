@@ -13,6 +13,9 @@ import {
   type CollectionTopTab
 } from "@/lib/collection-log-structure";
 import type { RecentItem } from "@/lib/types";
+import type { NormalizedStats } from "@/lib/types";
+import { buildCollectionBossKcSummary } from "@/lib/collection-boss-kc";
+import { CollectionBossKcContext } from "./CollectionBossKcContext";
 import { CollectionCategoryList } from "./CollectionCategoryList";
 import { CollectionCategorySummary } from "./CollectionCategorySummary";
 import { CollectionDebugPanel } from "./CollectionDebugPanel";
@@ -28,12 +31,14 @@ export function CollectionLogShell({
   initialCategoryId,
   partyModel,
   statuses,
-  recentItems
+  recentItems,
+  playerBossData = []
 }: {
   initialCategoryId?: string;
   partyModel: PartyCollectionModel;
   statuses: PlayerCollectionStatus[];
   recentItems: RecentItem[];
+  playerBossData?: NormalizedStats[];
 }) {
   const initialCategory = getSubCategoryById(initialCategoryId);
   const [activeTab, setActiveTab] = useState<CollectionTopTab>(initialCategory.topTab);
@@ -47,6 +52,7 @@ export function CollectionLogShell({
   const filteredItems = useMemo(() => filterCollectionItems(comparison.items, activeFilter, selectedPlayer), [activeFilter, comparison.items, selectedPlayer]);
   const players = partyModel.players.map((player) => player.username);
   const emptyState = getCollectionEmptyState(comparison, activeFilter);
+  const bossKcSummary = activeCategory.topTab === "Bosses" ? buildCollectionBossKcSummary(activeCategory.id, playerBossData) : null;
 
   useEffect(() => {
     const nextCategory = getSubCategoryById(initialCategoryId);
@@ -98,6 +104,7 @@ export function CollectionLogShell({
         <main className="collectionLogMain">
           <CollectionSyncNotice statuses={statuses} />
           <CollectionCategorySummary comparison={comparison} />
+          <CollectionBossKcContext summary={bossKcSummary} />
           <CollectionPlayerSummary comparison={comparison} />
           <CollectionFilters
             activeFilter={activeFilter}
@@ -111,7 +118,7 @@ export function CollectionLogShell({
         </main>
       </div>
 
-      <CollectionItemDrawer category={activeCategory} item={openItem} onClose={() => setOpenItem(null)} recentItems={recentItems} />
+      <CollectionItemDrawer bossKcSummary={bossKcSummary} category={activeCategory} item={openItem} onClose={() => setOpenItem(null)} recentItems={recentItems} />
     </div>
   );
 }
