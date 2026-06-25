@@ -7,6 +7,7 @@ import { buildAwards } from "@/lib/awards";
 import { formatNumber } from "@/lib/format";
 import { loadGains } from "@/lib/loaders";
 import { calculateScore, SCORE_EXPLANATIONS } from "@/lib/scoring";
+import { getServerActiveParty } from "@/lib/server-settings";
 import type { Period } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,8 @@ const PERIODS: { label: string; value: Period }[] = [
 export default async function GainsPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const period = (typeof params?.period === "string" ? params.period : "week") as Period;
-  const results = await loadGains(period);
+  const partySlots = await getServerActiveParty();
+  const results = await loadGains(period, partySlots);
   const gains = results.flatMap((result) => (result.ok && result.data ? [result.data] : []));
   const grinder = buildAwards({ gains }).find((award) => award.title === "Biggest Grinder");
   const seasonLeaders = [...gains].sort((a, b) => calculateScore({ gains: b }).seasonScore - calculateScore({ gains: a }).seasonScore);

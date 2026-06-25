@@ -1,3 +1,4 @@
+import { isBossMetric, normalizeBossName } from "./bosses";
 import type {
   BossStat,
   NormalizedCollection,
@@ -97,15 +98,12 @@ export function extractSkills(raw: unknown): SkillStat[] {
 
 export function extractBosses(raw: unknown): BossStat[] {
   const data = unwrapData(raw);
-  const skillSet = new Set<string>(SKILLS);
 
   return Object.entries(data)
     .filter(([key, value]) => {
-      if (skillSet.has(key) || SYSTEM_FIELDS.has(key)) return false;
-      if (key.endsWith("_rank") || key.endsWith("_level") || key.toLowerCase().endsWith("_ehp")) return false;
-      return toNumber(value) > 0;
+      return toNumber(value) > 0 && isBossMetric(key);
     })
-    .map(([key, value]) => ({ name: key.replace(/_/g, " "), kc: toNumber(value) }))
+    .map(([key, value]) => ({ name: normalizeBossName(key), kc: toNumber(value) }))
     .sort((a, b) => b.kc - a.kc);
 }
 

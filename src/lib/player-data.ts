@@ -1,7 +1,8 @@
 import { evaluateAchievements, type AchievementPlayerData, type AchievementResult } from "./achievements";
 import { buildCommandCenter, type CommandCenter } from "./game";
 import { loadCollections, loadGains, loadInfo, loadPets, loadRecentItems, loadStats } from "./loaders";
-import { PLAYER_NAMES } from "./players";
+import { getServerActiveParty } from "./server-settings";
+import type { ActivePartySlot } from "./settings";
 import type { ApiResult, NormalizedCollection, NormalizedStats, PetSummary, PlayerInfo } from "./types";
 
 export type PlayerData = AchievementPlayerData;
@@ -34,35 +35,37 @@ function resultData<T>(results: ApiResult<T>[], username: string): T | undefined
 }
 
 function buildPlayers(input: {
+  partySlots: ActivePartySlot[];
   statsResults: ApiResult<NormalizedStats>[];
   gainsResults: ApiResult<NormalizedStats>[];
   collectionResults: ApiResult<NormalizedCollection>[];
   petResults: ApiResult<PetSummary>[];
 }): PlayerData[] {
-  return PLAYER_NAMES.map((username) => ({
-    username,
-    stats: resultData(input.statsResults, username),
-    gains: resultData(input.gainsResults, username),
-    collection: resultData(input.collectionResults, username),
-    pets: resultData(input.petResults, username)
+  return input.partySlots.map((slot) => ({
+    username: slot.slotName,
+    stats: resultData(input.statsResults, slot.slotName),
+    gains: resultData(input.gainsResults, slot.slotName),
+    collection: resultData(input.collectionResults, slot.slotName),
+    pets: resultData(input.petResults, slot.slotName)
   }));
 }
 
 export async function loadCorePlayerData(): Promise<CorePlayerData> {
+  const partySlots = await getServerActiveParty();
   const [statsResults, gainsResults, collectionResults, petResults, recent] = await Promise.all([
-    loadStats(),
-    loadGains("week"),
-    loadCollections(),
-    loadPets(),
-    loadRecentItems()
+    loadStats(partySlots),
+    loadGains("week", partySlots),
+    loadCollections(partySlots),
+    loadPets(partySlots),
+    loadRecentItems(partySlots)
   ]);
   const stats = okData(statsResults);
   const gains = okData(gainsResults);
   const collections = okData(collectionResults);
   const pets = okData(petResults);
-  const players = buildPlayers({ statsResults, gainsResults, collectionResults, petResults });
+  const players = buildPlayers({ partySlots, statsResults, gainsResults, collectionResults, petResults });
   const achievements = evaluateAchievements(players);
-  const command = buildCommandCenter({ players: PLAYER_NAMES, stats, gains, collections, pets, recentItems: recent.merged });
+  const command = buildCommandCenter({ players: partySlots.map((slot) => slot.slotName), stats, gains, collections, pets, recentItems: recent.merged });
 
   return {
     statsResults,
@@ -81,6 +84,7 @@ export async function loadCorePlayerData(): Promise<CorePlayerData> {
 }
 
 export async function loadCorePlayerDataWithInfo(): Promise<CorePlayerDataWithInfo> {
-  const [infoResults, core] = await Promise.all([loadInfo(), loadCorePlayerData()]);
+  const partySlots = await getServerActiveParty();
+  const [infoResults, core] = await Promise.all([loadInfo(partySlots), loadCorePlayerData()]);
   return { ...core, infoResults };
 }
