@@ -1,0 +1,33 @@
+import { itemDefinitions } from "./helpers";
+
+export const petItems = itemDefinitions("other-pets", [
+  "Abyssal orphan",
+  "Baby mole",
+  "Callisto cub",
+  "Hellpuppy",
+  "Kalphite princess",
+  "Pet chaos elemental",
+  "Pet dagannoth prime",
+  "Pet dagannoth rex",
+  "Pet dagannoth supreme",
+  "Pet general graardor",
+  "Pet k'ril tsutsaroth",
+  "Pet kree'arra",
+  "Pet smoke devil",
+  "Pet snakeling",
+  "Prince black dragon",
+  "Scorpia's offspring",
+  "Skotos",
+  "Venenatis spiderling",
+  "Vet'ion jr.",
+  "Vorki",
+  "Tangleroot",
+  "Rocky",
+  "Heron",
+  "Beaver",
+  "Giant squirrel",
+  "Rift guardian",
+  "Phoenix",
+  "Tiny tempor",
+  "Bloodhound"
+]);

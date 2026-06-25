@@ -168,7 +168,8 @@ export function normalizeCollectionLog(username: string, raw: unknown): Normaliz
     rank: toNumber(data.collections_hiscores_rank ?? data.rank),
     percentage: calculateCollectionPercentage(finishedItems, availableItems),
     itemNames: collectNames(data.items ?? data.collection_log ?? data.collections),
-    missingItemNames: collectNames(data.missing_items ?? data.missing)
+    missingItemNames: collectNames(data.missing_items ?? data.missing),
+    collectionItems: []
   };
 }
 

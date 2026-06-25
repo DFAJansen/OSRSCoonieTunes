@@ -1,6 +1,7 @@
 import { getNestedValue, isRecord, safeNumber, safeString } from "./format";
 import type {
   BossStat,
+  CollectionLogItemRecord,
   NormalizedCollection,
   NormalizedStats,
   PetSummary,
@@ -168,6 +169,46 @@ function collectNames(value: unknown): string[] {
     .filter(Boolean);
 }
 
+function collectCollectionNames(value: unknown, mode: "owned" | "missing"): string[] {
+  return collectCollectionItems(value)
+    .map((item) => {
+      const matchesMode = mode === "owned" ? item.count === null || item.count > 0 : item.count === 0;
+      return matchesMode ? item.name : "";
+    })
+    .filter(Boolean);
+}
+
+function collectCollectionItems(value: unknown): CollectionLogItemRecord[] {
+  const entries = Array.isArray(value)
+    ? value.map((item) => ({ item, categoryKey: undefined }))
+    : isRecord(value)
+      ? Object.entries(value).flatMap(([categoryKey, categoryItems]) =>
+          Array.isArray(categoryItems) ? categoryItems.map((item) => ({ item, categoryKey })) : []
+        )
+      : [];
+
+  return entries
+    .map<CollectionLogItemRecord | null>(({ item, categoryKey }) => {
+      if (typeof item === "string") {
+        return { name: item, count: null, categoryKey };
+      }
+
+      if (!isRecord(item)) return null;
+
+      const name = safeString(item.name ?? item.item_name ?? item.item ?? item.itemName, "");
+      if (!name) return null;
+
+      return {
+        name,
+        itemId: safeNumber(item.id ?? item.item_id ?? item.itemId) ?? undefined,
+        count: safeNumber(item.count ?? item.quantity ?? item.obtained),
+        date: safeString(item.date ?? item.time ?? item.obtained_at ?? item.Date, "") || undefined,
+        categoryKey
+      };
+    })
+    .filter((item): item is CollectionLogItemRecord => Boolean(item));
+}
+
 export function normalizeCollectionLog(raw: unknown, username: string): NormalizedCollection {
   const data = unwrapData(raw);
   const finishedItems = safeNumber(getNestedValue(data, ["total_collections_finished", "total_items_finished", "obtained"]));
@@ -182,8 +223,9 @@ export function normalizeCollectionLog(raw: unknown, username: string): Normaliz
     availableCategories,
     rank: safeNumber(getNestedValue(data, ["collections_hiscores_rank", "rank"])),
     percentage: calculateCollectionPercentage(finishedItems, availableItems),
-    itemNames: collectNames(data.items ?? data.collection_log ?? data.collections),
-    missingItemNames: collectNames(data.missing_items ?? data.missing)
+    itemNames: collectCollectionNames(data.items ?? data.collection_log ?? data.collections, "owned"),
+    missingItemNames: collectCollectionNames(data.missing_items ?? data.missing ?? data.items ?? data.collection_log ?? data.collections, "missing"),
+    collectionItems: collectCollectionItems(data.items ?? data.collection_log ?? data.collections)
   };
 }
 
