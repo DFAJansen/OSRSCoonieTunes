@@ -78,6 +78,15 @@ export type NormalizedCollection = {
   percentage: number | null;
   itemNames: string[];
   missingItemNames: string[];
+  collectionItems: CollectionLogItemRecord[];
+};
+
+export type CollectionLogItemRecord = {
+  name: string;
+  itemId?: number;
+  count: number | null;
+  date?: string;
+  categoryKey?: string;
 };
 
 export type RecentItem = {
